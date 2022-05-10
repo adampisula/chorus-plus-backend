@@ -1,0 +1,8 @@
+{
+  "executablePath7Zip": "/usr/bin/7z",
+  "redirectUrl": "https://chorus.fightthe.pw/",
+  "tempPath": "/tmp/chorus-plus",
+  "logPath": "/var/log/chorus-plus",
+  "optPath": "/var/opt/chorus-plus",
+  "cacheExpiryTime": 86400
+}
