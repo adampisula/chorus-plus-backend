@@ -5,4 +5,4 @@ temp/
 
 .env
 ServiceAccountCredentials.json
-test.config.json
+config.dev.json

@@ -6,8 +6,9 @@ import { downloadFile, downloadFolder } from "./download"
 import unpack from "./unpack"
 import zip from "./zip"
 import logger from "./logger"
+import getConfig from "./getConfig"
 
-const config = require('../../config.json')
+const config = getConfig()
 
 const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) => {
   return new Promise((resolve, reject) => {
@@ -43,7 +44,7 @@ const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) =
                         rimraf(pF, e => {
                           if(e) {
                             logger.error({
-                              error: err,
+                              error: JSON.stringify(err),
                               data: hash,
                             })
                             reject(e)
@@ -54,7 +55,7 @@ const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) =
                       })
                       .catch((err) => {
                         logger.error({
-                          error: err,
+                          error: JSON.stringify(err),
                           data: hash,
                         })
                         reject(err)
@@ -62,7 +63,7 @@ const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) =
                   })
                   .on('error', err => {
                     logger.error({
-                      error: err,
+                      error: JSON.stringify(err),
                       data: hash,
                     })
                     reject(err)
@@ -86,7 +87,7 @@ const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) =
                   rimraf(p, e => {
                     if(e) {
                       logger.error({
-                        error: e,
+                        error: JSON.stringify(e),
                         data: hash,
                       })
                       reject(e)
@@ -100,7 +101,7 @@ const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) =
                           rimraf(extractFolder, e => {
                             if(e) {
                               logger.error({
-                                error: e,
+                                error: JSON.stringify(e),
                                 data: hash,
                               })
                               reject(e)
@@ -111,7 +112,7 @@ const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) =
                         })
                         .catch((err) => {
                           logger.error({
-                            error: err,
+                            error: JSON.stringify(err),
                             data: hash,
                           })
                           reject(err)
@@ -122,7 +123,7 @@ const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) =
               })
               .on('error', err => {
                 logger.error({
-                  error: err,
+                  error: JSON.stringify(err),
                   data: hash,
                 })
                 reject(err)
@@ -131,7 +132,7 @@ const downloadAndProcess = (drive: drive_v3.Drive, gdId: string, hash: string) =
       })
       .catch((err) => {
         logger.error({
-          error: err,
+          error: JSON.stringify(err),
           data: hash,
         })
         reject(err)

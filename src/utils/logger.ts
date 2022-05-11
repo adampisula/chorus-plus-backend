@@ -1,12 +1,12 @@
 import winston from "winston"
+import getConfig from "./getConfig"
 
-const config = require('../../config.json')
+const config = getConfig()
 
 const logger = winston.createLogger({
   transports: [
     // LOG TO CONSOLE
     new winston.transports.Console({
-      
       format: winston.format.combine(
         winston.format.timestamp({
           format: 'DD/MM/YYYY HH:mm:ss'

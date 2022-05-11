@@ -1,10 +1,11 @@
 import { exec } from 'child_process'
 import { mkdirSync } from 'fs'
 import { parse } from 'path' 
+import getConfig from './getConfig'
 
 export default (absFilePath: string, absExtractParentFolder: string): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const config = require('../../config.json')
+    const config = getConfig()
     
     if(!config.executablePath7Zip) {
       reject('Incorrect p7zip executable path provided!')

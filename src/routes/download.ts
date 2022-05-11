@@ -11,8 +11,9 @@ import ExtendedRequest from '../types/ExtendedRequest'
 import StackEntryStatus from '../types/StackEntryStatus'
 import HistoryEntry from '../types/HistoryEntry'
 import logger from '../utils/logger'
+import getConfig from '../utils/getConfig'
 
-const config = require('../../config.json')
+const config = getConfig()
 const TEMP_PATH = config.tempPath
 
 const router = express.Router()
@@ -35,7 +36,7 @@ router.get('/download/:hash', (req: ExtendedRequest, res) => {
     `, (err, rows) => {
       if(err) {
         logger.error({
-          error: err,
+          error: JSON.stringify(err),
           data: req.params.hash,
         })
         res.send(err)
@@ -96,7 +97,7 @@ router.get('/download/:hash', (req: ExtendedRequest, res) => {
                   }
                 } else {
                   logger.error({
-                    error: err,
+                    error: JSON.stringify(err),
                     data: req.params.hash,
                   })
                   res.send(err)
@@ -143,7 +144,7 @@ router.get('/download/:hash', (req: ExtendedRequest, res) => {
                   `)
 
                   logger.error({
-                    error: err,
+                    error: JSON.stringify(err),
                     data: req.params.hash,
                   })
                   res.send(err)
@@ -151,7 +152,7 @@ router.get('/download/:hash', (req: ExtendedRequest, res) => {
             })
             .catch((err) => {
               logger.error({
-                error: err,
+                error: JSON.stringify(err),
                 data: req.params.hash,
               })
               res.send(err)

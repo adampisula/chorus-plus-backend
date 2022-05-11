@@ -1,28 +1,31 @@
 import express from 'express'
-import { google } from 'googleapis'
+import { drive_v3, google } from 'googleapis'
 
 import downloadRouter from './routes/download'
 import panelRouter from './routes/panel'
 
 import ExtendedRequest from './types/ExtendedRequest'
 import DAO from './utils/stackDatabase'
-import cronRemoveStackEntries from './cronRemoveStackEntries'
+import cronRemoveStackEntries from './workers/cronRemoveStackEntries'
 import logger from './utils/logger'
 import { existsSync, writeFileSync } from 'fs'
 import dotenv from 'dotenv'
 import basicAuth from 'express-basic-auth'
+import randomString from './utils/randomString'
+import getConfig from './utils/getConfig'
+import { GoogleAuth } from 'google-auth-library'
 
 dotenv.config()
 
 const app = express()
 const PORT = 80
 
-const config = require('../config.json')
+const config = getConfig()
 
 const KEYFILEPATH = 'ServiceAccountCredentials.json'
 const SCOPES = [ 'https://www.googleapis.com/auth/drive' ]
 
-if(!existsSync(KEYFILEPATH) || (process.env.SAC_PROJECT_ID && process.env.SAC_PRIVATE_KEY_ID && process.env.SAC_PRIVATE_KEY && process.env.SAC_CLIENT_EMAIL && process.env.SAC_CLIENT_ID && process.env.SAC_CLIENT_X509_CERT_URL)) {
+if((!existsSync(KEYFILEPATH) || (process.env.SAC_PROJECT_ID && process.env.SAC_PRIVATE_KEY_ID && process.env.SAC_PRIVATE_KEY && process.env.SAC_CLIENT_EMAIL && process.env.SAC_CLIENT_ID && process.env.SAC_CLIENT_X509_CERT_URL)) && process.env.DISABLE_SAC_GENERATION == 'false') {
   const serviceAccountCredentials = {
     type: process.env.SAC_TYPE || "service_account",
     project_id: process.env.SAC_PROJECT_ID,
@@ -39,34 +42,31 @@ if(!existsSync(KEYFILEPATH) || (process.env.SAC_PROJECT_ID && process.env.SAC_PR
   writeFileSync(KEYFILEPATH, JSON.stringify(serviceAccountCredentials, null, 2))
 }
 
-const randomString = (length: number) => {
-  let result = '';
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let charactersLength = characters.length;
-  
-  for ( let i = 0; i < length; i++ ) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-
-  return result;
-}
-
 // CREATE PANEL AUTH IDENTITIES
 const authIdentitiesLogins = [ 'admin' ]
 const authIdentities = {}
 
 for(let i = 0; i < authIdentitiesLogins.length; i++) {
-  authIdentities[authIdentitiesLogins[i]] = randomString(16)
+  authIdentities[authIdentitiesLogins[i]] = randomString(16, true)
 }
 
 logger.info(`Identities created: ${JSON.stringify(authIdentities)}`)
 
-const auth = new google.auth.GoogleAuth({
-  keyFile: KEYFILEPATH,
-  scopes: SCOPES,
-})
+let auth: GoogleAuth
+let driveService: drive_v3.Drive
 
-const driveService = google.drive({ version: 'v3', auth })
+try {
+  auth = new google.auth.GoogleAuth({
+    keyFile: KEYFILEPATH,
+    scopes: SCOPES,
+  })
+
+  driveService = google.drive({ version: 'v3', auth })
+} catch(err) {
+  logger.error({
+    error: JSON.stringify(err),
+  })
+}
 
 // Database Access Object
 const dao = new DAO()
@@ -89,6 +89,12 @@ app.use(panelRouter)
 
 cronRemoveStackEntries.start()
 
-app.listen(PORT, () => {
-  logger.info(`Chorus Plus is listening on port ${PORT}`)
-})
+try {
+  app.listen(PORT, () => {
+    logger.info(`Chorus Plus is listening on port ${PORT}`)
+  })
+} catch(err) {
+  logger.error({
+    error: JSON.stringify(err),
+  })
+}

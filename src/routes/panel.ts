@@ -2,8 +2,9 @@ import express from 'express'
 import ExtendedRequest from '../types/ExtendedRequest'
 import logger from '../utils/logger'
 import fs from 'fs'
+import getConfig from '../utils/getConfig'
 
-const config = require('../../config.json')
+const config = getConfig()
 const router = express.Router()
 
 router.get('/panel', (req: ExtendedRequest, res) => {

@@ -1,9 +1,10 @@
-import DAO from "./utils/stackDatabase"
+import DAO from "../utils/stackDatabase"
 import { unlink } from "fs"
 import { CronJob } from "cron"
-import logger from "./utils/logger"
+import logger from "../utils/logger"
+import getConfig from "../utils/getConfig"
 
-const config = require('../config.json')
+const config = getConfig()
 
 const EXPIRY_TIME = config.cacheExpiryTime
 const TEMP_PATH = config.tempPath
@@ -20,7 +21,7 @@ const job = new CronJob(
       `, (err, rows) => {
         if(err) {
           logger.error({
-            error: err,
+            error: JSON.stringify(err),
           })
         } else {
           rows.forEach(({ md5 }) => {
@@ -29,7 +30,7 @@ const job = new CronJob(
             unlink(`${TEMP_PATH}/${md5}.zip`, (err) => {
               if(err) {
                 logger.error({
-                  error: err,
+                  error: JSON.stringify(err),
                 })
               } else {
                 dao.database.exec(`
@@ -37,7 +38,7 @@ const job = new CronJob(
                 `, (err) => {
                   if(err) {
                     logger.error({
-                      error: err,
+                      error: JSON.stringify(err),
                     })
                   }
                 })

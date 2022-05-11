@@ -1,7 +1,8 @@
 import sqlite3 from 'sqlite3'
+import getConfig from './getConfig'
 import logger from './logger'
 
-const config = require('../../config.json')
+const config = getConfig()
 
 const DB_PATH = `${config.optPath}/stack.db`
 
@@ -14,10 +15,17 @@ class DAO {
     return new Promise((res, rej) => {
       const dbInstance = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE, (err) => {
         if(err) {
-          this.createDatabase().then(() => {
-            this.createTables()
-            res(true)
-          })
+          this.createDatabase()
+            .then(() => {
+              this.createTables()
+              res(true)
+            })
+            .catch((err) => {
+              logger.error({
+                error: JSON.stringify(err),
+              })
+              rej(err)
+            })
         } else {
           this.database = dbInstance
           res(true)
@@ -30,10 +38,7 @@ class DAO {
     return new Promise((res, rej) => {
       const dbInstance = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
         if(err) {
-          logger.error({
-            error: err
-          })
-          rej()
+          rej(err)
         } else {
           this.database = dbInstance
 
@@ -55,7 +60,7 @@ class DAO {
     `, (err) => {
       if(err) {
         logger.error({
-          error: err
+          error: JSON.stringify(err),
         })
       }
     })
