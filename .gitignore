@@ -4,7 +4,5 @@ temp/
 .vscode/
 
 .env
-stack.db
-history.csv
 ServiceAccountCredentials.json
 test.config.json

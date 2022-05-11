@@ -20,12 +20,10 @@ const router = express.Router()
 router.use(getRequestCountry)
 
 router.get('/', (req, res) => {
-  logger.info('Redirecting to Chorus')
-
-  res.redirect(config.redirectUrl)
+  res.send('Hello!')
 })
 
-router.get('/:hash', (req: ExtendedRequest, res) => {
+router.get('/download/:hash', (req: ExtendedRequest, res) => {
   if(req.params.hash.length == 32) {
     const geo = geoip.lookup(req.clientIp)
     const country = (geo) ? geo.country || 'N-A' : 'N-A'

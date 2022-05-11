@@ -1,18 +1,23 @@
 import express from 'express'
 import { google } from 'googleapis'
 
-import indexRouter from './routes/index'
+import downloadRouter from './routes/download'
+import panelRouter from './routes/panel'
+
 import ExtendedRequest from './types/ExtendedRequest'
 import DAO from './utils/stackDatabase'
 import cronRemoveStackEntries from './cronRemoveStackEntries'
 import logger from './utils/logger'
 import { existsSync, writeFileSync } from 'fs'
 import dotenv from 'dotenv'
+import basicAuth from 'express-basic-auth'
 
 dotenv.config()
 
 const app = express()
 const PORT = 80
+
+const config = require('../config.json')
 
 const KEYFILEPATH = 'ServiceAccountCredentials.json'
 const SCOPES = [ 'https://www.googleapis.com/auth/drive' ]
@@ -34,6 +39,28 @@ if(!existsSync(KEYFILEPATH) || (process.env.SAC_PROJECT_ID && process.env.SAC_PR
   writeFileSync(KEYFILEPATH, JSON.stringify(serviceAccountCredentials, null, 2))
 }
 
+const randomString = (length: number) => {
+  let result = '';
+  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let charactersLength = characters.length;
+  
+  for ( let i = 0; i < length; i++ ) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+
+  return result;
+}
+
+// CREATE PANEL AUTH IDENTITIES
+const authIdentitiesLogins = [ 'admin' ]
+const authIdentities = {}
+
+for(let i = 0; i < authIdentitiesLogins.length; i++) {
+  authIdentities[authIdentitiesLogins[i]] = randomString(16)
+}
+
+logger.info(`Identities created: ${JSON.stringify(authIdentities)}`)
+
 const auth = new google.auth.GoogleAuth({
   keyFile: KEYFILEPATH,
   scopes: SCOPES,
@@ -50,7 +77,15 @@ app.use((req: ExtendedRequest, res, next) => {
   req.dao = dao
   next()
 })
-app.use(indexRouter)
+app.use(downloadRouter)
+
+app.set('view engine', 'ejs')
+
+app.use(basicAuth({
+  users: authIdentities,
+  challenge: true,
+}))
+app.use(panelRouter)
 
 cronRemoveStackEntries.start()
 

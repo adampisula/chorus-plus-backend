@@ -6,3 +6,4 @@ node_modules/
 test.config.json
 .env
 .gitignore
+ServiceAccountCredentials.json

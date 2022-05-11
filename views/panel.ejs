@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chorus+ Panel</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <!-- STACK TABLE -->
+    <table>
+      <caption>Stack</caption>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Hash</th>
+          <th>Last used</th>
+          <th>Status</th>
+          <th>File</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% stack.forEach((stackEntry) => { %>
+          <tr>
+            <th><%= stackEntry.id %></th>
+            <th><%= stackEntry.md5 %></th>
+            <th><%= (new Date(stackEntry.last_used * 1000)).toISOString() %></th>
+            <th><%= stackEntry.status %></th>
+            <th><%= (stackEntry.status == 'CACHED' && cache.includes(`${stackEntry.md5}.zip`)) ? 'OK' : 'N_OK' %></th>
+            <th>
+              <button class="action-button-remove" data-hash="<%= stackEntry.md5 %>">Remove</button>
+            </th>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+
+    <!-- CACHE TABLE -->
+    <table>
+      <caption>Cached files</caption>
+      <tbody>
+        <% cache.forEach((cachedFile) => { %>
+          <tr>
+            <th><%= cachedFile %></th>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </body>
+
+  <style>
+    table, th {
+      border: 1px solid;
+      margin-top: 20px;
+      font-family: monospace;
+    }
+  </style>
+
+  <script>
+    $(".action-button-remove").click(function() {
+      $.post(`/panel/${$(this).attr('data-hash')}/remove`, {}, (data) => {
+        console.log(data)
+
+        if(data == 'OK') {
+          location.reload()
+        }
+      })
+    })
+  </script>
+</html>
