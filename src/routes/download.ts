@@ -11,6 +11,8 @@ import ExtendedRequest from '../types/ExtendedRequest'
 import StackEntryStatus from '../types/StackEntryStatus'
 import HistoryEntry from '../types/HistoryEntry'
 import logger from '../utils/logger'
+import { existsSync } from 'fs'
+import removeCachedFile from '../utils/removeCachedFile'
 
 const config = require('../../config.json')
 const TEMP_PATH = config.tempPath
@@ -24,6 +26,10 @@ router.get('/', (req, res) => {
 })
 
 router.get('/download/:hash', (req: ExtendedRequest, res) => {
+  downloadHandler(req, res)
+})
+
+const downloadHandler = (req: ExtendedRequest, res) => {
   if(req.params.hash.length == 32) {
     const geo = geoip.lookup(req.clientIp)
     const country = (geo) ? geo.country || 'N-A' : 'N-A'
@@ -59,8 +65,15 @@ router.get('/download/:hash', (req: ExtendedRequest, res) => {
 
             addHistoryEntry(historyEntry)
 
-            logger.info(`Sending cached file (${req.params.hash})`)
-            res.sendFile(`${TEMP_PATH}/${req.params.hash}.zip`)
+            if(existsSync(`${TEMP_PATH}/${req.params.hash}.zip`)) {
+              logger.info(`Sending cached file (${req.params.hash})`)
+              res.sendFile(`${TEMP_PATH}/${req.params.hash}.zip`)
+            } else {
+              logger.info(`Cached file corrupted. Removing cache and retrying (${req.params.hash})`)
+              removeCachedFile(req.params.hash, req.dao).then(() => {
+                downloadHandler(req, res)
+              })
+            }
           } else {
             logger.info(`Requested file currently being downloaded. Waiting (${req.params.hash})`)
 
@@ -163,6 +176,6 @@ router.get('/download/:hash', (req: ExtendedRequest, res) => {
     logger.info(`Incorrect file hash (${req.params.hash})`)
     res.send('Incorrect hash')
   }
-})
+}
 
 export default router

@@ -6,3 +6,4 @@ temp/
 .env
 ServiceAccountCredentials.json
 test.config.json
+package-lock.json
